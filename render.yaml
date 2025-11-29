@@ -1,0 +1,19 @@
+services:
+  - type: worker
+    name: telegram-fcm-bridge
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python telegram_fcm_bridge.py
+    envVars:
+      - key: TELEGRAM_API_ID
+        value: 29831238
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: TELEGRAM_CHANNEL_ID
+        value: -1003193908746
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false
+      - key: RENDER
+        value: true
