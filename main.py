@@ -15,6 +15,9 @@ from migrations import (
     migrate_add_fcm_field_to_users,
     migrate_add_fcm_field_to_admins,
     check_fcm_token_status,
+    reset_fcm_token_for_users,
+    reset_fcm_token_for_admins,
+    reset_fcm_token_all,
     custom_migration
 )
 
@@ -178,7 +181,16 @@ def show_menu():
     print("11. 🔄 Add fcmToken Field: All (Users + Admins)")
     print("12. 🔄 Add fcmToken Field: Users Only")
     print("13. 🔄 Add fcmToken Field: Admins Only")
-    print("14. ⚡ Custom Migration")
+    
+    print("\n🔄 RESET FCM TOKEN:")
+    print("14. 🔁 Reset FCM Token: Specific User")
+    print("15. 🔁 Reset FCM Token: All Users")
+    print("16. 🔁 Reset FCM Token: Specific Admin")
+    print("17. 🔁 Reset FCM Token: All Admins")
+    print("18. 🔁 Reset FCM Token: All (Users + Admins)")
+    
+    print("\n⚡ OTHER:")
+    print("19. ⚡ Custom Migration")
     
     print("\n0. 🚪 Exit")
     print("=" * 60)
@@ -285,6 +297,56 @@ def main():
             input("\nPress Enter to continue...")
             
         elif choice == "14":
+            # Reset FCM Token: Specific User
+            print("⚠️  WARNING: This will reset FCM token for a specific user!")
+            confirm = input("Continue? (yes/no): ").strip().lower()
+            if confirm == "yes":
+                reset_fcm_token_for_users(reset_all=False)
+            else:
+                print("❌ Reset cancelled")
+            input("\nPress Enter to continue...")
+            
+        elif choice == "15":
+            # Reset FCM Token: All Users
+            print("⚠️  WARNING: This will reset FCM tokens for ALL users!")
+            confirm = input("Continue? (yes/no): ").strip().lower()
+            if confirm == "yes":
+                reset_fcm_token_for_users(reset_all=True)
+            else:
+                print("❌ Reset cancelled")
+            input("\nPress Enter to continue...")
+            
+        elif choice == "16":
+            # Reset FCM Token: Specific Admin
+            print("⚠️  WARNING: This will reset FCM token for a specific admin!")
+            confirm = input("Continue? (yes/no): ").strip().lower()
+            if confirm == "yes":
+                reset_fcm_token_for_admins(reset_all=False)
+            else:
+                print("❌ Reset cancelled")
+            input("\nPress Enter to continue...")
+            
+        elif choice == "17":
+            # Reset FCM Token: All Admins
+            print("⚠️  WARNING: This will reset FCM tokens for ALL admins!")
+            confirm = input("Continue? (yes/no): ").strip().lower()
+            if confirm == "yes":
+                reset_fcm_token_for_admins(reset_all=True)
+            else:
+                print("❌ Reset cancelled")
+            input("\nPress Enter to continue...")
+            
+        elif choice == "18":
+            # Reset FCM Token: All (Users + Admins)
+            print("⚠️  DANGER: This will reset FCM tokens for ALL users AND admins!")
+            confirm = input("Type 'RESET ALL' to confirm: ").strip()
+            if confirm == "RESET ALL":
+                reset_fcm_token_all(reset_all_users=True, reset_all_admins=True)
+            else:
+                print("❌ Reset cancelled")
+            input("\nPress Enter to continue...")
+            
+        elif choice == "19":
             # Custom Migration
             print("⚠️  WARNING: This will run custom migration!")
             confirm = input("Continue? (yes/no): ").strip().lower()

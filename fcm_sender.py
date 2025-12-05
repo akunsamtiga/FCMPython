@@ -44,9 +44,9 @@ def send_signal_to_tokens(signal_data: dict, tokens: list) -> dict:
         
         print(f"📡 Sending to {len(tokens)} devices...")
         
-        # Prepare FCM data
-        trend_letter = "B" if signal_data['trend'] == "call" else "S"
-        formatted_message = f"{hour:02d}:{minute:02d}:{second:02d} {trend_letter}"
+        # ✅ PERBAIKAN: Gunakan kata lengkap (BUY/SELL) bukan huruf (B/S)
+        trend_word = "BUY" if signal_data['trend'] == "call" else "SELL"
+        formatted_message = f"{hour:02d}:{minute:02d}:{second:02d} {trend_word}"
         
         fcm_data = {
             "type": "TRADING_SIGNAL",

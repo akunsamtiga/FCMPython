@@ -126,6 +126,218 @@ def migrate_add_fcm_field_all():
         return False
 
 
+def reset_fcm_token_for_users(reset_all=False):
+    """
+    Reset FCM token for whitelist_users
+    
+    Args:
+        reset_all: If True, reset all users. If False, ask for specific email
+    """
+    try:
+        if firebase_manager.db is None:
+            print("❌ Firestore client not initialized")
+            return False
+        
+        print("=" * 60)
+        print("🔄 RESET FCM TOKEN: Users")
+        print("=" * 60)
+        
+        users_ref = firebase_manager.db.collection('whitelist_users')
+        
+        if reset_all:
+            print("\n⚠️  WARNING: This will reset ALL user FCM tokens!")
+            confirm = input("Type 'yes' to confirm: ").strip().lower()
+            if confirm != 'yes':
+                print("❌ Reset cancelled")
+                return False
+            
+            all_users = users_ref.stream()
+            reset_count = 0
+            
+            for doc in all_users:
+                user_data = doc.to_dict()
+                email = user_data.get('email', 'unknown')
+                
+                doc.reference.update({
+                    'fcmToken': '',
+                    'fcmTokenUpdatedAt': 0
+                })
+                
+                reset_count += 1
+                print(f"   ✅ {email}: FCM token reset")
+            
+            print(f"\n📊 Reset Summary:")
+            print(f"   Total users reset: {reset_count}")
+            
+        else:
+            email_to_reset = input("\nEnter user email to reset: ").strip()
+            if not email_to_reset:
+                print("❌ Email cannot be empty")
+                return False
+            
+            from google.cloud.firestore_v1.base_query import FieldFilter
+            
+            query = users_ref.where(
+                filter=FieldFilter('email', '==', email_to_reset)
+            ).limit(1).stream()
+            
+            found = False
+            for doc in query:
+                found = True
+                user_data = doc.to_dict()
+                
+                doc.reference.update({
+                    'fcmToken': '',
+                    'fcmTokenUpdatedAt': 0
+                })
+                
+                print(f"\n✅ FCM token reset for: {email_to_reset}")
+                print(f"   Previous token: {user_data.get('fcmToken', 'N/A')[:30]}...")
+                print(f"   New token: (empty)")
+            
+            if not found:
+                print(f"\n❌ User not found: {email_to_reset}")
+                return False
+        
+        print("=" * 60)
+        return True
+        
+    except Exception as e:
+        print(f"❌ Reset error: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def reset_fcm_token_for_admins(reset_all=False, role_filter=None):
+    """
+    Reset FCM token for admin_users
+    
+    Args:
+        reset_all: If True, reset all admins. If False, ask for specific email
+        role_filter: Optional role filter ('admin', 'super_admin', etc.)
+    """
+    try:
+        if firebase_manager.db is None:
+            print("❌ Firestore client not initialized")
+            return False
+        
+        print("=" * 60)
+        print("🔄 RESET FCM TOKEN: Admins")
+        print("=" * 60)
+        
+        admins_ref = firebase_manager.db.collection('admin_users')
+        
+        if reset_all:
+            role_text = f" ({role_filter.upper()})" if role_filter else ""
+            print(f"\n⚠️  WARNING: This will reset ALL admin{role_text} FCM tokens!")
+            confirm = input("Type 'yes' to confirm: ").strip().lower()
+            if confirm != 'yes':
+                print("❌ Reset cancelled")
+                return False
+            
+            all_admins = admins_ref.stream()
+            reset_count = 0
+            
+            for doc in all_admins:
+                admin_data = doc.to_dict()
+                email = admin_data.get('email', 'unknown')
+                role = admin_data.get('role', 'admin')
+                
+                # Apply role filter if specified
+                if role_filter and role != role_filter:
+                    continue
+                
+                doc.reference.update({
+                    'fcmToken': '',
+                    'fcmTokenUpdatedAt': 0
+                })
+                
+                reset_count += 1
+                print(f"   ✅ {email} ({role}): FCM token reset")
+            
+            print(f"\n📊 Reset Summary:")
+            print(f"   Total admins reset: {reset_count}")
+            
+        else:
+            email_to_reset = input("\nEnter admin email to reset: ").strip()
+            if not email_to_reset:
+                print("❌ Email cannot be empty")
+                return False
+            
+            from google.cloud.firestore_v1.base_query import FieldFilter
+            
+            query = admins_ref.where(
+                filter=FieldFilter('email', '==', email_to_reset)
+            ).limit(1).stream()
+            
+            found = False
+            for doc in query:
+                found = True
+                admin_data = doc.to_dict()
+                role = admin_data.get('role', 'admin')
+                
+                doc.reference.update({
+                    'fcmToken': '',
+                    'fcmTokenUpdatedAt': 0
+                })
+                
+                print(f"\n✅ FCM token reset for: {email_to_reset} ({role})")
+                print(f"   Previous token: {admin_data.get('fcmToken', 'N/A')[:30]}...")
+                print(f"   New token: (empty)")
+            
+            if not found:
+                print(f"\n❌ Admin not found: {email_to_reset}")
+                return False
+        
+        print("=" * 60)
+        return True
+        
+    except Exception as e:
+        print(f"❌ Reset error: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def reset_fcm_token_all(reset_all_users=False, reset_all_admins=False, admin_role_filter=None):
+    """
+    Reset FCM tokens for both users and admins
+    
+    Args:
+        reset_all_users: If True, reset all users
+        reset_all_admins: If True, reset all admins
+        admin_role_filter: Filter admins by role
+    """
+    print("=" * 60)
+    print("🔄 RESET FCM TOKENS: Users + Admins")
+    print("=" * 60)
+    
+    success_users = False
+    success_admins = False
+    
+    if reset_all_users:
+        print("\n👥 Resetting user FCM tokens...")
+        success_users = reset_fcm_token_for_users(reset_all=True)
+    
+    if reset_all_admins:
+        print("\n👑 Resetting admin FCM tokens...")
+        success_admins = reset_fcm_token_for_admins(reset_all=True, role_filter=admin_role_filter)
+    
+    if not reset_all_users and not reset_all_admins:
+        print("\n💡 Use specific reset functions instead:")
+        print("   - Reset users: reset_fcm_token_for_users()")
+        print("   - Reset admins: reset_fcm_token_for_admins()")
+        return False
+    
+    if success_users or success_admins:
+        print("\n✅ Reset completed successfully!")
+        return True
+    else:
+        print("\n⚠️  Reset completed with errors")
+        return False
+
+
 def check_fcm_token_status():
     """
     Check FCM token status for both users and admins
@@ -226,11 +438,11 @@ def check_fcm_token_status():
         print("\n💡 ACTION REQUIRED:")
         if len(users_without_field) > 0 or len(admins_without_field) > 0:
             print("   ⚠️  Some users/admins need fcmToken field added")
-            print("   📝 Run migration to add fcmToken field")
+            print("   🔧 Run migration to add fcmToken field")
         
         if len(users_with_field_empty) > 0 or len(admins_with_field_empty) > 0:
             print("   ⚠️  Some users/admins have empty fcmToken")
-            print("   📝 Users/admins need to login to app to save their FCM token")
+            print("   🔧 Users/admins need to login to app to save their FCM token")
         
         if len(users_with_field_filled) > 0 or len(admins_with_field_filled) > 0:
             print("   ✅ Some users/admins ready to receive signals")
