@@ -55,7 +55,7 @@ def send_signal_to_tokens(signal_data: dict, tokens: list) -> dict:
             "hour": str(hour),
             "minute": str(minute),
             "second": str(second),
-            "original_message": signal_data["original_message"],
+            "original_message": formatted_message,
             "formatted_message": formatted_message,
             "auto_time_added": str(signal_data.get("auto_time_added", False)).lower(),
             "parsed_at": signal_data["parsed_at"],
